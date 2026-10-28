@@ -1,0 +1,2 @@
+Set-Location 'e:\Final Year Project'
+.\.venv\Scripts\python.exe run.py

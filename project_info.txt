@@ -1,0 +1,175 @@
+﻿================================================================
+                     PROJECT INFORMATION
+================================================================
+
+PROJECT NAME:
+  RAVIS: Reliability-Aware Visual-Intermodal Synchronization for Explainable Deepfake Detection
+
+STUDENT / FINAL YEAR PROJECT:
+  Deepfake detection using multimodal audio-visual synchronization
+  analysis powered by MediaPipe, Random Forest, and a custom
+  cross-modal temporal correlation pipeline.
+
+----------------------------------------------------------------
+
+PROJECT WORKING / HOW IT WORKS:
+  Two detection modes are available:
+
+  MODE 1 — Upload Video:
+  ──────────────────────
+  1. User uploads a video file (MP4, AVI, MOV, MKV, WebM)
+     through the browser drag-and-drop interface.
+  2. Flask backend receives the file, assigns a unique job ID,
+     and starts an async background pipeline thread.
+  3. Pipeline stages (with live progress shown in the UI):
+       Stage 1 — Validate      : Check file format, size, duration.
+       Stage 2 — Extract Audio : Use ffmpeg to extract 16kHz WAV audio.
+       Stage 3 — Extract Frames: Sample video at 25 FPS using OpenCV.
+       Stage 4 — Face Detect   : Run MediaPipe FaceMesh (478 landmarks)
+                                  per frame; compute Mouth Aspect Ratio (MAR).
+       Stage 5 — Audio Features: Extract MFCC, Mel spectrogram, RMS energy,
+                                  ZCR, spectral centroid via librosa.
+       Stage 6 — Visual Features: Aggregate MAR stats, lip velocity,
+                                  face detection rate, head pose estimates.
+       Stage 7 — Sync Analysis : Cross-correlation, DTW distance,
+                                  cosine similarity between audio energy
+                                  envelope and lip movement signal.
+       Stage 8 — Classify      : Random Forest model (200 trees, 74 features)
+                                  predicts REAL or FAKE probability.
+       Stage 9 — Explain       : Explainer generates plain-English summary,
+                                  reliability grade, suspicious timestamps.
+  4. Frontend polls /api/status/{job_id} every 900ms for progress.
+  5. On completion, results are displayed:
+       - REAL / FAKE verdict with confidence %
+       - Lip-audio sync score and A/V delay (ms)
+       - Face detection rate and reliability grade
+       - Feature contribution bar chart (5 categories)
+       - Per-second timeline with suspicious moments flagged
+       - Plain-English explanation of why the result was given
+
+  MODE 2 — Live Camera:
+  ──────────────────────
+  1. User opens the Live Camera section and clicks Start Recording.
+  2. Browser requests webcam + microphone access.
+  3. While recording:
+       - MediaPipe FaceMesh runs at 25 FPS in the browser (client-side).
+       - Lip mesh is drawn on canvas overlay in real-time with color
+         coding: indigo = closed, amber = slightly open, red = wide open.
+       - MAR (Mouth Aspect Ratio), audio RMS, and sync score are
+         computed per frame and shown as live rolling charts.
+       - MediaRecorder captures the full video+audio stream to memory.
+  4. User clicks Stop & Analyze.
+  5. The recorded video blob is sent to /api/analyze (same full pipeline
+     as Mode 1 above).
+  6. Final results displayed with full metrics, feature bars,
+     explanation, and suspicious moment timeline.
+
+----------------------------------------------------------------
+
+FEATURES:
+
+  Upload & Detection:
+  ├─ Drag-and-drop video upload with file preview
+  ├─ Demo presets (Fake / Real) for instant testing
+  ├─ 9-stage async detection pipeline with live progress bar
+  ├─ Supports MP4, AVI, MOV, MKV, WebM up to 500 MB
+  └─ Job-based async architecture (non-blocking UI)
+
+  Live Camera Detection:
+  ├─ Real-time webcam recording with MediaRecorder API
+  ├─ Live lip landmark mesh overlay (478 MediaPipe points)
+  ├─ Live MAR, Audio RMS, and Sync Score rolling charts
+  ├─ Color-coded lip mesh (synced = indigo, open = amber, wide = red)
+  └─ Full pipeline analysis triggered on Stop & Analyze
+
+  Analysis Pipeline:
+  ├─ MediaPipe FaceMesh: 478 facial landmarks, MAR computation
+  ├─ Audio: MFCC (13 coefficients), Mel spectrogram, ZCR, RMS
+  ├─ Sync: Cross-correlation peak, DTW distance, cosine similarity
+  ├─ Classifier: Random Forest (200 trees, 74 features, scikit-learn)
+  └─ Explainer: Reliability grade, suspicious timestamps, narrative
+
+  Results Dashboard:
+  ├─ Big clear FAKE / REAL verdict with confidence percentage
+  ├─ 4 metric cards: Lip-Audio Sync, Audio Delay, Face Detected, Reliability
+  ├─ Feature contribution bars (5 categories, color-coded)
+  ├─ Plain-English explanation of the detection reasoning
+  ├─ Per-second timeline bar (green / yellow / red segments)
+  ├─ Suspicious moment list with timestamps and sync scores
+  └─ Downloadable plain-text report
+
+  History & UX:
+  ├─ Session history table with all past analyses
+  ├─ Re-view any past result from history
+  ├─ Sidebar navigation (Upload, Live Camera, History)
+  └─ Responsive design (desktop and tablet)
+
+----------------------------------------------------------------
+
+API ENDPOINTS:
+
+  POST /api/analyze
+      Accepts multipart video upload. Returns {job_id}.
+
+  GET  /api/status/{job_id}
+      Returns {status, progress, stage, result, error}.
+      Statuses: queued → running → done / failed
+
+  POST /api/realtime_score
+      Accepts JSON with pre-computed features (mar_mean, rms_mean,
+      sync_score, xcorr_peak, lag_ms, etc.).
+      Returns backend RF verdict for live camera refinement.
+
+  GET  /api/health
+      Returns {"status": "ok"}.
+
+----------------------------------------------------------------
+
+TECH STACK:
+
+  Backend:
+  ├─ Python 3.11
+  ├─ Flask 3.0 + Flask-CORS
+  ├─ OpenCV 4.10 (frame extraction, face bounding box)
+  ├─ MediaPipe 0.10 (FaceMesh 478-point landmark detection)
+  ├─ librosa 0.10 (MFCC, Mel spectrogram, RMS, ZCR)
+  ├─ scipy (DTW, cross-correlation, cosine similarity)
+  ├─ scikit-learn 1.5 (Random Forest classifier, joblib)
+  ├─ moviepy + imageio-ffmpeg (audio extraction fallback)
+  └─ numpy 1.26
+
+  Frontend:
+  ├─ HTML5 / CSS3 / Vanilla JavaScript (no frameworks)
+  ├─ MediaPipe FaceMesh (CDN, browser-side live tracking)
+  ├─ MediaRecorder API (browser-side video/audio recording)
+  ├─ Web Audio API (browser-side RMS energy analysis)
+  └─ Canvas API (lip mesh overlay drawing)
+
+  ML Model:
+  ├─ Algorithm   : Random Forest (n_estimators=200, max_depth=15)
+  ├─ Features    : 74 (audio MFCC + visual MAR + sync metrics)
+  ├─ Training    : Synthetic feature distributions (1600 samples)
+  ├─ Test AUC    : ~0.97 on held-out synthetic test set
+  └─ Model file  : backend/models/rf_model.pkl (joblib)
+
+----------------------------------------------------------------
+
+HOW TO RUN:
+
+  Prerequisites:
+    - Python 3.11 virtual environment (.venv) with requirements.txt installed
+    - ffmpeg (bundled via imageio-ffmpeg — no separate install needed)
+
+  Start the server:
+    Set-Location 'e:\Final Year Project'
+    .\.venv\Scripts\python.exe -B run.py
+
+  Open in browser:
+    http://localhost:5000
+
+  The server:
+    - Auto-trains the model if rf_model.pkl is missing
+    - Serves the frontend from /frontend/
+    - Handles all API requests on the same port
+
+================================================================

@@ -1,0 +1,824 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#FFFFFF" />
+  <title>RAVIS — Reliability-Aware Visual-Intermodal Synchronization</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+  <link rel="stylesheet" href="/css/style.css?v=16" />
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+</head>
+<body>
+<div class="app">
+
+  <!-- ═══════════════ SIDEBAR ═══════════════ -->
+  <aside class="sidebar">
+    <!-- Logo -->
+    <div class="sidebar-logo">
+      <div class="logo-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" fill="#3533FF"/></svg>
+      </div>
+      <div>
+        <div class="logo-name">RAVIS</div>
+        <div class="logo-sub">Deepfake Detection System</div>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="sidebar-nav">
+      <a class="nav-link active" id="nav-upload" href="#" data-section="upload">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Upload Video
+      </a>
+      <a class="nav-link" id="nav-live" href="#" data-section="live">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/></svg>
+        Live Camera
+        <span class="nav-badge">NEW</span>
+      </a>
+      <a class="nav-link" id="nav-history" href="#" data-section="history">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3zM3 9h18M9 21V9"/></svg>
+        History
+      </a>
+      <a class="nav-link" id="nav-about" href="#" data-section="about">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        About
+      </a>
+    </nav>
+
+    <!-- How it works -->
+    <div class="sidebar-howto">
+      <div class="howto-title">How it works</div>
+      <div class="howto-steps">
+        <div class="howto-step">
+          <span class="step-num">1</span>
+          <span>Upload or record a video</span>
+        </div>
+        <div class="howto-step">
+          <span class="step-num">2</span>
+          <span>AI analyzes lip movement &amp; audio</span>
+        </div>
+        <div class="howto-step">
+          <span class="step-num">3</span>
+          <span>Get instant REAL or FAKE result</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">© 2026 RAVIS</div>
+  </aside>
+
+  <!-- ═══════════════ MAIN ═══════════════ -->
+  <div class="main">
+
+    <!-- Top bar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 class="page-title" id="page-title">Upload Video</h1>
+        <p class="page-sub" id="page-sub">Upload a video to check if it's a deepfake</p>
+      </div>
+      <div class="topbar-right">
+        <div class="status-pill" id="status-pill">
+          <span class="status-dot" id="status-dot"></span>
+          <span id="status-text">Ready</span>
+        </div>
+        <button class="btn-icon" id="btn-reset" title="Reset">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ─────────────── SECTION: UPLOAD ─────────────── -->
+    <section class="content-section active" id="section-upload">
+      <div class="dash-grid">
+
+        <!-- 1 · UPLOAD + PLAYER -->
+        <div class="card panel-upload">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Source video</div>
+              <div class="card-desc">MP4 · AVI · MOV · MKV · WebM</div>
+            </div>
+            <span class="panel-badge" id="upload-badge">No file</span>
+          </div>
+
+          <!-- Drop zone (shown before a file is picked) -->
+          <div class="dropzone" id="drop-zone" tabindex="0" role="button">
+            <div class="dropzone-inner" id="dropzone-idle">
+              <p class="drop-main">Drag &amp; drop your video</p>
+              <p class="drop-sub">or browse files · max 500 MB</p>
+              <button class="btn-primary" id="btn-browse" type="button">Choose file</button>
+            </div>
+            <input type="file" id="file-input" accept=".mp4,.avi,.mov,.mkv,.webm" />
+          </div>
+
+          <!-- Player (shown after a file is picked) -->
+          <div class="up-player" id="up-player" style="display:none">
+            <video id="up-video" controls playsinline preload="metadata"></video>
+          </div>
+
+          <!-- Selected file row -->
+          <div class="up-file" id="file-preview" style="display:none">
+            <div class="file-info">
+              <div class="file-name" id="file-name">video.mp4</div>
+              <div class="file-meta" id="file-meta">0 MB</div>
+            </div>
+            <button class="btn-remove" id="btn-clear" type="button" aria-label="Remove file">Remove</button>
+          </div>
+
+          <!-- Analyze + progress -->
+          <button class="btn-analyze" id="btn-analyze" disabled>
+            Analyze video
+          </button>
+
+          <div class="progress-wrap" id="progress-wrap" style="display:none">
+            <div class="progress-head">
+              <span class="progress-stage" id="progress-stage">Processing…</span>
+              <span class="progress-pct" id="progress-pct">0%</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div class="pipeline-steps" id="pipeline-steps">
+              <span class="pip" id="pip-1">Validate</span>
+              <span class="pip" id="pip-2">Audio</span>
+              <span class="pip" id="pip-3">Frames</span>
+              <span class="pip" id="pip-4">Face</span>
+              <span class="pip" id="pip-5">Sync</span>
+              <span class="pip" id="pip-6">Classify</span>
+              <span class="pip" id="pip-7">Explain</span>
+            </div>
+          </div>
+
+          <div class="demo-row">
+            <span class="demo-label">Demo</span>
+            <button class="btn-demo" data-demo="demo_deepfake">Fake</button>
+            <button class="btn-demo" data-demo="demo_authentic">Real</button>
+          </div>
+        </div>
+
+        <!-- 2 · OVERALL RESULT -->
+        <div class="card results-card panel-result" id="results-card">
+
+          <div class="card-head">
+            <div>
+              <div class="card-title">Analysis result</div>
+              <div class="card-desc">Verdict, measurements and evidence</div>
+            </div>
+          </div>
+
+          <!-- Empty state -->
+          <div class="results-empty" id="results-empty">
+            <p class="empty-title">No results yet</p>
+            <p class="empty-sub">Upload a video and click <strong>Analyze video</strong> to see the result.</p>
+          </div>
+
+          <!-- Verdict (hidden until done) -->
+          <div id="results-content" style="display:none">
+
+            <div class="verdict-banner" id="verdict-banner">
+              <div class="verdict-text">
+                <div class="verdict-kicker">Overall result</div>
+                <div class="verdict-label" id="verdict-label">FAKE</div>
+                <div class="verdict-sub" id="verdict-sub">This video is likely a deepfake</div>
+              </div>
+              <div class="verdict-conf">
+                <div class="conf-number" id="conf-number">94.7%</div>
+                <div class="conf-label">Confidence</div>
+                <div class="conf-reliability">Reliability <b id="m-rel">—</b></div>
+              </div>
+            </div>
+
+            <section class="result-block">
+              <div class="result-block-title">Core measurements</div>
+              <table class="core-table">
+                <thead>
+                  <tr><th>Forensic check</th><th>Observed</th><th>Reference</th><th>Finding</th></tr>
+                </thead>
+                <tbody id="sp-table">
+                  <tr><td>Lip–audio sync score</td><td>—</td><td>≥ 0.62</td><td><span class="finding idle">pending</span></td></tr>
+                  <tr><td>Lip / speech offset</td><td>—</td><td>&lt; 40 ms</td><td><span class="finding idle">pending</span></td></tr>
+                  <tr><td>Cross-correlation peak</td><td>—</td><td>&gt; 0.50</td><td><span class="finding idle">pending</span></td></tr>
+                  <tr><td>Dynamic time warping</td><td>—</td><td>&lt; 0.25</td><td><span class="finding idle">pending</span></td></tr>
+                  <tr><td>Face tracking coverage</td><td>—</td><td>&gt; 85%</td><td><span class="finding idle">pending</span></td></tr>
+                </tbody>
+              </table>
+            </section>
+
+            <div class="explanation-box" id="explanation-box">
+              <p class="expl-text" id="expl-text">Loading explanation…</p>
+            </div>
+
+            <div class="timeline-section" id="timeline-section">
+              <div class="result-block-title">Suspicious moments</div>
+              <div class="timeline-bar-row" id="timeline-bar-row"></div>
+              <div class="timeline-legend">
+                <span class="leg-item"><span class="leg-dot green"></span>In sync</span>
+                <span class="leg-item"><span class="leg-dot yellow"></span>Slight mismatch</span>
+                <span class="leg-item"><span class="leg-dot red"></span>Suspicious</span>
+              </div>
+              <div class="flagged-list" id="flagged-list"></div>
+            </div>
+
+            <div class="result-actions">
+              <button class="btn-primary" id="btn-download-report">Download PDF report</button>
+              <button class="btn-secondary" id="btn-new">Analyze another video</button>
+            </div>
+
+          </div><!-- /results-content -->
+        </div><!-- /panel-result -->
+
+        <!-- 3 · 3D FACE LANDMARKER (REALTIME · KINETIC) -->
+        <div class="card panel-mesh">
+          <div class="card-head">
+            <div>
+              <div class="card-title">3D face landmarker</div>
+              <div class="card-desc">478 points · head pose · micro-motion</div>
+            </div>
+            <span class="live-status-badge" id="mesh-status">Idle</span>
+          </div>
+
+          <div class="mesh-stage" id="mesh-stage">
+            <canvas id="mesh-canvas"></canvas>
+            <div class="mesh-empty" id="mesh-empty">
+              Pick a video above and press play. The 3D mesh follows the jaw, lips and eyes,
+              and reports head pose plus kinetic jitter in real time.
+            </div>
+            <div class="mesh-hud" id="mesh-hud" style="display:none">
+              <span class="hud-chip">MAR <b id="mesh-mar">—</b></span>
+              <span class="hud-chip">FPS <b id="mesh-fps">—</b></span>
+              <span class="hud-chip" id="mesh-face-chip">NO FACE</span>
+              <span class="hud-chip" id="mesh-engine-chip">3D</span>
+            </div>
+            <!-- Play / pause overlay button -->
+            <button class="mesh-playbtn" id="mesh-playbtn" title="Play / Pause" style="display:none" aria-label="Play or pause video">
+              <svg id="mesh-play-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+              <svg id="mesh-pause-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            </button>
+            <div class="mesh-axis-label">HEAD POSE</div>
+          </div>
+
+          <div class="mesh-foot">
+            <div class="mesh-pose">
+              <div class="pose-row"><span>Yaw</span><div class="pose-track"><i id="pose-yaw"></i><em class="pose-mid"></em></div><b id="pose-yaw-val">0°</b></div>
+              <div class="pose-row"><span>Pitch</span><div class="pose-track"><i id="pose-pitch"></i><em class="pose-mid"></em></div><b id="pose-pitch-val">0°</b></div>
+              <div class="pose-row"><span>Roll</span><div class="pose-track"><i id="pose-roll"></i><em class="pose-mid"></em></div><b id="pose-roll-val">0°</b></div>
+            </div>
+
+            <div class="mesh-stats">
+              <div class="mesh-stat"><span>Jaw open</span><b id="mesh-jaw">—</b></div>
+              <div class="mesh-stat"><span>Kinetic energy</span><b id="mesh-kinetic">—</b></div>
+              <div class="mesh-stat"><span>Micro-jitter</span><b id="mesh-jitter">—</b></div>
+              <div class="mesh-stat"><span>Blink L / R</span><b id="mesh-blink">—</b></div>
+              <div class="mesh-stat"><span>Landmarks</span><b id="mesh-conf">—</b></div>
+              <div class="mesh-stat"><span>Motion vectors</span><b id="mesh-vectors">—</b></div>
+            </div>
+
+            <p class="mesh-note">On-device MediaPipe Face Landmarker. The mesh step never uploads your video.</p>
+          </div>
+        </div>
+
+        <!-- 4 · AUDIO / VIDEO SYNC DETAILS -->
+        <div class="card panel-sync">
+          <div class="card-head">
+            <div>
+              <div class="card-title">A/V synchronisation</div>
+              <div class="card-desc">Signal-level evidence of lip / speech alignment</div>
+            </div>
+          </div>
+
+          <div class="sync-body">
+            <p class="sync-lead">
+              Deepfakes usually re-render the mouth without re-timing the audio. The chart plots
+              lip-motion against speech energy: authentic speech peaks together, manipulated video drifts.
+            </p>
+
+            <div class="sync-chart-wrap">
+              <canvas id="sync-chart"></canvas>
+              <div class="sync-chart-legend">
+                <span><i class="sw audio"></i>Audio energy</span>
+                <span><i class="sw lip"></i>Lip motion (MAR)</span>
+                <span><i class="sw curve"></i>Sync curve</span>
+              </div>
+            </div>
+
+            <div class="sync-verdict" id="sp-verdict">Awaiting analysis — run a video to populate the signal comparison.</div>
+
+            <p class="sync-method">Peak cross-correlation search ±0.75 s; DTW residual measured after global alignment.</p>
+          </div>
+        </div>
+
+        <!-- 5 · AI MODEL + FORENSIC EVIDENCE (FULL WIDTH) -->
+        <div class="card panel-forensic">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Forensic evidence</div>
+              <div class="card-desc">Model identity, decision trace and integrity metadata</div>
+            </div>
+            <span class="panel-badge" id="fd-model-badge">Awaiting analysis</span>
+          </div>
+
+          <div class="fd-empty" id="fd-empty">
+            Run an analysis to populate the forensic record — model identity, evidence checks,
+            classification, reasoning trace and file-integrity metadata.
+          </div>
+
+          <div class="fd-body" id="fd-body" style="display:none">
+
+            <div class="fd-overview">
+              <section class="fd-block">
+                <h3 class="fd-block-title">Model identity</h3>
+                <dl class="fd-facts">
+                  <div class="fd-fact"><dt>Model</dt><dd id="fd-model">—</dd></div>
+                  <div class="fd-fact"><dt>Architecture</dt><dd>Multimodal ensemble</dd></div>
+                  <div class="fd-fact"><dt>Input features</dt><dd>74 (audio · visual · sync)</dd></div>
+                  <div class="fd-fact"><dt>Decision threshold</dt><dd>0.500</dd></div>
+                  <div class="fd-fact"><dt>Inference time</dt><dd id="fd-time">—</dd></div>
+                  <div class="fd-fact"><dt>Analysis timestamp</dt><dd id="fd-stamp">—</dd></div>
+                  <div class="fd-fact"><dt>Engine</dt><dd>RAVIS · v2.4</dd></div>
+                  <div class="fd-fact wide"><dt>SHA-256</dt><dd id="fd-hash" class="mono">—</dd></div>
+                </dl>
+              </section>
+
+              <section class="fd-block">
+                <h3 class="fd-block-title">Decision</h3>
+                <div class="fd-decision-head">
+                  <b id="fd-verdict">—</b>
+                  <span>Confidence <b id="fd-conf">—</b></span>
+                </div>
+                <div class="fd-prob">
+                  <div class="fd-prob-row"><span>Deepfake probability</span><b id="fd-fake">—</b></div>
+                  <div class="fd-prob-track"><i id="fd-fake-fill"></i></div>
+                  <div class="fd-prob-row"><span>Authentic probability</span><b id="fd-real">—</b></div>
+                  <div class="fd-prob-track"><i id="fd-real-fill" class="real"></i></div>
+                </div>
+                <dl class="fd-facts">
+                  <div class="fd-fact"><dt>Reliability grade</dt><dd id="fd-rel">—</dd></div>
+                </dl>
+              </section>
+
+              <section class="fd-block">
+                <h3 class="fd-block-title">Classification <span class="fd-block-meta" id="fd-tags-n">—</span></h3>
+                <div class="fd-chips" id="fd-chips"></div>
+                <p class="fd-note" id="fd-note"></p>
+              </section>
+            </div>
+
+            <section class="fd-block">
+              <h3 class="fd-block-title">Evidence checks</h3>
+              <table class="evidence-table">
+                <thead>
+                  <tr><th>Check</th><th>Status</th><th>Finding</th><th>Weight</th></tr>
+                </thead>
+                <tbody id="fd-evidence"></tbody>
+              </table>
+            </section>
+
+            <section class="fd-block">
+              <h3 class="fd-block-title">Reasoning trace</h3>
+              <ol class="fd-reasons" id="fd-reasons"></ol>
+            </section>
+
+            <p class="fd-disclaimer">
+              Decision support only. A trained examiner should correlate this output with source
+              provenance, container metadata and original-device acquisition before formal attribution.
+            </p>
+          </div>
+        </div>
+
+      </div><!-- /dash-grid -->
+    </section>
+
+    <!-- ─────────────── SECTION: LIVE CAMERA ─────────────── -->
+    <section class="content-section" id="section-live">
+      <div class="live-layout">
+
+        <!-- Camera card -->
+        <div class="card live-cam-card">
+          <div class="card-head">
+            <span class="card-icon">📹</span>
+            <div>
+              <div class="card-title">Live Camera Detection</div>
+              <div class="card-desc">Record yourself speaking — press Stop to analyze</div>
+            </div>
+            <div class="live-status-badge" id="live-status-badge">Inactive</div>
+          </div>
+
+          <div class="cam-viewport" id="cam-viewport">
+            <video id="rt-webcam-video" autoplay muted playsinline></video>
+            <canvas id="rt-mesh-canvas"></canvas>
+            <div class="cam-hud" id="cam-hud" style="display:none">
+              <div class="hud-chip rec"><span class="rec-blink"></span> REC</div>
+              <div class="hud-chip" id="hud-mar">MAR: —</div>
+              <div class="hud-chip" id="hud-sync">SYNC: —</div>
+            </div>
+
+            <!-- LIVE FAKE INDICATOR (big overlay bottom-right) -->
+            <div class="live-fake-indicator" id="live-fake-indicator" style="display:none">
+              <div class="lfi-icon" id="lfi-icon">🟡</div>
+              <div class="lfi-label" id="lfi-label">ANALYZING</div>
+              <div class="lfi-conf" id="lfi-conf">—</div>
+            </div>
+
+            <!-- VOICE QUALITY indicator (bottom-left) -->
+            <div class="voice-quality-badge" id="voice-quality-badge" style="display:none">
+              <div class="vq-bar-group" id="vq-bars">
+                <div class="vq-bar" id="vq-b1"></div>
+                <div class="vq-bar" id="vq-b2"></div>
+                <div class="vq-bar" id="vq-b3"></div>
+                <div class="vq-bar" id="vq-b4"></div>
+                <div class="vq-bar" id="vq-b5"></div>
+              </div>
+              <span class="vq-label" id="vq-label">VOICE</span>
+            </div>
+
+            <div class="cam-placeholder" id="cam-placeholder">
+              <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#39415f" stroke-width="1.2"><path d="M23 7 16 12 23 17V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+              <p>Camera not started</p>
+              <p class="small">Click Start Recording below</p>
+            </div>
+          </div>
+
+          <!-- PER-SECOND TIMELINE TILES -->
+          <div class="timeline-tiles-wrap" id="timeline-tiles-wrap" style="display:none">
+            <div class="tiles-header">
+              <span class="tiles-title">Second-by-second timeline</span>
+              <div class="tiles-legend">
+                <span><span class="tile-dot good"></span>Good sync</span>
+                <span><span class="tile-dot warn"></span>Slight mismatch</span>
+                <span><span class="tile-dot bad"></span>Suspicious</span>
+                <span><span class="tile-dot noface"></span>No face</span>
+              </div>
+            </div>
+            <div class="timeline-tiles" id="timeline-tiles"></div>
+          </div>
+
+          <div class="cam-controls">
+            <select class="select-cam" id="rt-cam-select" title="Camera">
+              <option>Default Camera</option>
+            </select>
+            <button class="btn-record" id="rt-btn-start">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"/></svg>
+              Start Recording
+            </button>
+            <button class="btn-stop-analyze" id="rt-btn-stop" disabled>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12"/></svg>
+              Stop &amp; Analyze
+            </button>
+          </div>
+
+          <div class="cam-timer-row">
+            <span class="cam-timer-label">Recording time:</span>
+            <span class="cam-timer" id="rt-elapsed">00:00</span>
+            <span class="cam-timer-label" style="margin-left:16px">Frames:</span>
+            <span class="cam-timer" id="rt-frame-counter">0</span>
+          </div>
+        </div>
+
+        <!-- Live metrics card -->
+        <div class="card live-metrics-card">
+          <div class="card-head">
+            <span class="card-icon">📊</span>
+            <div>
+              <div class="card-title">Live Metrics</div>
+              <div class="card-desc">Updating in real-time while recording</div>
+            </div>
+          </div>
+
+          <!-- MAR chart -->
+          <div class="chart-block">
+            <div class="chart-label">
+              <span>Mouth Opening (MAR)</span>
+              <span class="chart-val" id="rt-mar-current">0.000</span>
+            </div>
+            <div class="chart-wrap"><canvas id="rt-mar-chart" height="56"></canvas></div>
+            <div class="chart-stats">
+              <div class="stat-item"><span>Average</span><strong id="rt-mar-mean">—</strong></div>
+              <div class="stat-item"><span>Variation</span><strong id="rt-mar-std">—</strong></div>
+              <div class="stat-item"><span>Lip Events</span><strong id="rt-lip-events">—</strong></div>
+            </div>
+          </div>
+
+          <!-- Audio RMS chart -->
+          <div class="chart-block">
+            <div class="chart-label">
+              <span>Audio Level (RMS)</span>
+              <span class="chart-val green" id="rt-audio-rms">0.000</span>
+            </div>
+            <div class="chart-wrap"><canvas id="rt-audio-chart" height="56"></canvas></div>
+            <div class="chart-stats">
+              <div class="stat-item"><span>Peak</span><strong id="rt-audio-peak">—</strong></div>
+              <div class="stat-item"><span>Silence</span><strong id="rt-silence-ratio">—</strong></div>
+              <div class="stat-item"><span>Voice Active</span><strong id="rt-voice-active">—</strong></div>
+            </div>
+          </div>
+
+          <!-- Sync score chart -->
+          <div class="chart-block">
+            <div class="chart-label">
+              <span>Lip-Audio Sync Score</span>
+              <span class="chart-val" id="rt-sync-score">—</span>
+            </div>
+            <div class="chart-wrap"><canvas id="rt-sync-chart" height="56"></canvas></div>
+            <div class="chart-stats">
+              <div class="stat-item"><span>Audio Lag</span><strong id="rt-lag-ms">—</strong></div>
+              <div class="stat-item"><span>Cross-Corr</span><strong id="rt-xcorr">—</strong></div>
+              <div class="stat-item"><span>Suspicious</span><strong id="rt-suspicious-pct">—</strong></div>
+            </div>
+          </div>
+
+          <!-- Live verdict -->
+          <div class="live-verdict-box" id="live-verdict-box">
+            <div class="live-verdict-idle" id="lv-idle">
+              Start recording to see live metrics
+            </div>
+            <div class="live-verdict-active" id="lv-active" style="display:none">
+              <div class="lv-icon" id="lv-icon">⏺</div>
+              <div class="lv-label" id="lv-label">Recording…</div>
+              <div class="lv-sub" id="lv-sub">Press Stop &amp; Analyze for results</div>
+              <div class="lv-bars" id="lv-bars">
+                <div class="lv-bar-row">
+                  <span>Fake</span>
+                  <div class="lv-track"><div class="lv-fill red" id="lv-fake-fill" style="width:0%"></div></div>
+                  <span id="lv-fake-pct">0%</span>
+                </div>
+                <div class="lv-bar-row">
+                  <span>Real</span>
+                  <div class="lv-track"><div class="lv-fill green" id="lv-real-fill" style="width:100%"></div></div>
+                  <span id="lv-real-pct">100%</span>
+                </div>
+                <div class="lv-bar-row">
+                  <span>Sync</span>
+                  <div class="lv-track"><div class="lv-fill blue" id="lv-sync-fill" style="width:50%"></div></div>
+                  <span id="lv-sync-pct">0.50</span>
+                </div>
+              </div>
+              <div class="lv-explanation" id="lv-explanation">Collecting data…</div>
+            </div>
+          </div>
+
+        </div><!-- /live-metrics-card -->
+
+      </div><!-- /live-layout -->
+
+      <!-- Live result (shown after analysis completes) -->
+      <div class="card live-result-card" id="live-result-card" style="display:none">
+        <div class="card-head">
+          <div><div class="card-title">Analysis result</div><div class="card-desc">Based on your recorded video</div></div>
+        </div>
+        <div id="live-results-inner">
+          <!-- Same result content injected by JS -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ─────────────── SECTION: HISTORY ─────────────── -->
+    <section class="content-section" id="section-history">
+      <div class="card">
+        <div class="card-head">
+          <span class="card-icon">🗂️</span>
+          <div>
+            <div class="card-title">Analysis History</div>
+            <div class="card-desc">All videos you've analyzed this session</div>
+          </div>
+          <button class="btn-secondary small" id="btn-clear-history">Clear All</button>
+        </div>
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>File Name</th>
+              <th>Result</th>
+              <th>Confidence</th>
+              <th>Sync Score</th>
+              <th>Audio Lag</th>
+              <th>Date &amp; Time</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="history-tbody">
+            <tr class="history-empty-row">
+              <td colspan="8">No analyses yet. Upload a video to get started.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ─────────────── SECTION: ABOUT ─────────────── -->
+    <section class="content-section" id="section-about">
+
+      <!-- Hero banner -->
+      <div class="about-hero">
+        <div class="about-hero-icon">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" fill="rgba(255,255,255,0.9)"/></svg>
+        </div>
+        <div>
+          <div class="about-hero-title">RAVIS</div>
+          <div class="about-hero-sub">Reliability-Aware Visual-Intermodal Synchronization for Explainable Deepfake Detection</div>
+        </div>
+        <div class="about-hero-badges">
+          <span class="tech-badge">Random Forest</span>
+          <span class="tech-badge">MediaPipe</span>
+          <span class="tech-badge">Flask</span>
+          <span class="tech-badge">OpenCV</span>
+        </div>
+      </div>
+
+      <!-- Features grid -->
+      <div class="card">
+        <div class="card-head">
+          <span class="card-icon">✨</span>
+          <div>
+            <div class="card-title">Features</div>
+            <div class="card-desc">Everything this system can do</div>
+          </div>
+        </div>
+        <div class="features-about-grid">
+
+          <div class="feat-card">
+            <div class="feat-icon" style="background:rgba(53,51,255,0.12);color:#5E5CFF">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </div>
+            <div class="feat-body">
+              <div class="feat-name">Video Upload Interface</div>
+              <div class="feat-desc">Upload any video file directly from the browser using drag-and-drop or file picker. Supports MP4, AVI, MOV, MKV, WebM up to 500 MB.</div>
+            </div>
+          </div>
+
+          <div class="feat-card">
+            <div class="feat-icon" style="background:rgba(11,132,89,0.12);color:#0b8459">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>
+            </div>
+            <div class="feat-body">
+              <div class="feat-name">Face Detection</div>
+              <div class="feat-desc">Automatically detects faces in every video frame using MediaPipe FaceMesh — 478 precise landmarks including full lip contour tracking.</div>
+            </div>
+          </div>
+
+          <div class="feat-card">
+            <div class="feat-icon" style="background:rgba(168,86,16,0.12);color:#a85610">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            </div>
+            <div class="feat-body">
+              <div class="feat-name">Visual Feature Extraction</div>
+              <div class="feat-desc">Computes Mouth Aspect Ratio (MAR), lip velocity, lip event count, head pose, face area, and temporal entropy from detected face landmarks.</div>
+            </div>
+          </div>
+
+          <div class="feat-card">
+            <div class="feat-icon" style="background:rgba(143,97,4,0.12);color:#8f6104">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+            </div>
+            <div class="feat-body">
+              <div class="feat-name">Audio Feature Extraction</div>
+              <div class="feat-desc">Extracts MFCC (13 coefficients), Mel spectrogram, RMS energy, Zero Crossing Rate, spectral centroid, and speech activity from the audio track using librosa.</div>
+            </div>
+          </div>
+
+          <div class="feat-card">
+            <div class="feat-icon" style="background:rgba(107,91,214,0.12);color:#6b5bd6">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </div>
+            <div class="feat-body">
+              <div class="feat-name">Audio-Visual Sync Analysis</div>
+              <div class="feat-desc">Checks whether lip movements match the audio using cross-correlation, Dynamic Time Warping (DTW), and cosine similarity. The core deepfake signal — real speech is always in sync.</div>
+            </div>
+          </div>
+
+          <div class="feat-card">
+            <div class="feat-icon" style="background:rgba(53,51,255,0.12);color:#5E5CFF">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            </div>
+            <div class="feat-body">
+              <div class="feat-name">Machine Learning Classification</div>
+              <div class="feat-desc">Uses a trained Random Forest model (200 trees, 74 features) to classify the video as REAL or FAKE. Returns probability scores and confidence percentage.</div>
+            </div>
+          </div>
+
+          <div class="feat-card">
+            <div class="feat-icon" style="background:rgba(11,132,89,0.12);color:#0b8459">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            </div>
+            <div class="feat-body">
+              <div class="feat-name">Explainability</div>
+              <div class="feat-desc">Every result comes with a plain-English explanation, feature contribution bars showing what triggered the decision, reliability grade, and suspicious timestamps with sync scores.</div>
+            </div>
+          </div>
+
+          <div class="feat-card">
+            <div class="feat-icon" style="background:rgba(168,86,16,0.12);color:#a85610">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            </div>
+            <div class="feat-body">
+              <div class="feat-name">REST API Backend</div>
+              <div class="feat-desc">Flask-based async API handles file uploads, background processing, and job polling. Endpoints: POST /api/analyze, GET /api/status/{id}, POST /api/realtime_score.</div>
+            </div>
+          </div>
+
+          <div class="feat-card">
+            <div class="feat-icon" style="background:rgba(143,97,4,0.12);color:#8f6104">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+            </div>
+            <div class="feat-body">
+              <div class="feat-name">Responsive Web Frontend</div>
+              <div class="feat-desc">Clean HTML/CSS/JS interface with sidebar navigation, drag-and-drop upload, live camera recording, rolling charts, analysis history, and downloadable reports.</div>
+            </div>
+          </div>
+
+          <div class="feat-card">
+            <div class="feat-icon" style="background:rgba(107,91,214,0.12);color:#6b5bd6">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7 16 12 23 17V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+            </div>
+            <div class="feat-body">
+              <div class="feat-name">Live Camera Detection</div>
+              <div class="feat-desc">Real-time webcam lip tracking using MediaPipe in the browser. Records video+audio via MediaRecorder, then sends to the full backend pipeline for accurate deepfake analysis.</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Pipeline flow -->
+      <div class="card">
+        <div class="card-head">
+          <span class="card-icon">⚙️</span>
+          <div>
+            <div class="card-title">How It Works — Detection Pipeline</div>
+            <div class="card-desc">9 stages from upload to verdict</div>
+          </div>
+        </div>
+        <div class="pipeline-about">
+          <div class="pa-step"><span class="pa-num">1</span><div class="pa-info"><strong>Validate</strong><span>Check format, size, duration</span></div></div>
+          <div class="pa-arrow">→</div>
+          <div class="pa-step"><span class="pa-num">2</span><div class="pa-info"><strong>Extract Audio</strong><span>ffmpeg → 16kHz WAV</span></div></div>
+          <div class="pa-arrow">→</div>
+          <div class="pa-step"><span class="pa-num">3</span><div class="pa-info"><strong>Extract Frames</strong><span>OpenCV at 25 FPS</span></div></div>
+          <div class="pa-arrow">→</div>
+          <div class="pa-step"><span class="pa-num">4</span><div class="pa-info"><strong>Face Detection</strong><span>MediaPipe 478-pt mesh</span></div></div>
+          <div class="pa-arrow">→</div>
+          <div class="pa-step"><span class="pa-num">5</span><div class="pa-info"><strong>Audio Features</strong><span>MFCC, Mel, RMS</span></div></div>
+          <div class="pa-arrow">→</div>
+          <div class="pa-step"><span class="pa-num">6</span><div class="pa-info"><strong>Visual Features</strong><span>MAR, lip velocity</span></div></div>
+          <div class="pa-arrow">→</div>
+          <div class="pa-step"><span class="pa-num">7</span><div class="pa-info"><strong>Sync Analysis</strong><span>XCorr, DTW, Cosine</span></div></div>
+          <div class="pa-arrow">→</div>
+          <div class="pa-step"><span class="pa-num">8</span><div class="pa-info"><strong>Classify</strong><span>Random Forest 74 features</span></div></div>
+          <div class="pa-arrow">→</div>
+          <div class="pa-step"><span class="pa-num">9</span><div class="pa-info"><strong>Explain</strong><span>Plain-English result</span></div></div>
+        </div>
+      </div>
+
+      <!-- Tech stack -->
+      <div class="card">
+        <div class="card-head">
+          <span class="card-icon">🛠️</span>
+          <div>
+            <div class="card-title">Tech Stack</div>
+            <div class="card-desc">Libraries and tools powering RAVIS</div>
+          </div>
+        </div>
+        <div class="tech-stack-grid">
+          <div class="tech-col">
+            <div class="tech-col-title">Backend</div>
+            <div class="tech-item"><span class="tech-dot indigo"></span><strong>Python 3.11</strong><span>Core language</span></div>
+            <div class="tech-item"><span class="tech-dot indigo"></span><strong>Flask 3.0</strong><span>REST API + file serving</span></div>
+            <div class="tech-item"><span class="tech-dot green"></span><strong>OpenCV 4.10</strong><span>Frame extraction</span></div>
+            <div class="tech-item"><span class="tech-dot green"></span><strong>MediaPipe 0.10</strong><span>Face mesh / lip landmarks</span></div>
+            <div class="tech-item"><span class="tech-dot yellow"></span><strong>librosa 0.10</strong><span>Audio MFCC, Mel spectrogram</span></div>
+            <div class="tech-item"><span class="tech-dot yellow"></span><strong>scipy</strong><span>DTW, cross-correlation</span></div>
+            <div class="tech-item"><span class="tech-dot orange"></span><strong>scikit-learn 1.5</strong><span>Random Forest classifier</span></div>
+            <div class="tech-item"><span class="tech-dot orange"></span><strong>imageio-ffmpeg</strong><span>Bundled ffmpeg audio extraction</span></div>
+          </div>
+          <div class="tech-col">
+            <div class="tech-col-title">Frontend</div>
+            <div class="tech-item"><span class="tech-dot indigo"></span><strong>HTML5 / CSS3 / JS</strong><span>No frameworks — vanilla</span></div>
+            <div class="tech-item"><span class="tech-dot green"></span><strong>MediaPipe FaceMesh</strong><span>Browser-side lip tracking</span></div>
+            <div class="tech-item"><span class="tech-dot green"></span><strong>MediaRecorder API</strong><span>Browser video recording</span></div>
+            <div class="tech-item"><span class="tech-dot yellow"></span><strong>Web Audio API</strong><span>Browser mic RMS analysis</span></div>
+            <div class="tech-item"><span class="tech-dot yellow"></span><strong>Canvas API</strong><span>Lip mesh overlay drawing</span></div>
+          </div>
+          <div class="tech-col">
+            <div class="tech-col-title">ML Model</div>
+            <div class="tech-item"><span class="tech-dot indigo"></span><strong>Random Forest</strong><span>200 trees, max_depth 15</span></div>
+            <div class="tech-item"><span class="tech-dot green"></span><strong>74 features</strong><span>Audio + visual + sync</span></div>
+            <div class="tech-item"><span class="tech-dot green"></span><strong>Test AUC ~0.97</strong><span>On synthetic test set</span></div>
+            <div class="tech-item"><span class="tech-dot yellow"></span><strong>joblib</strong><span>Model serialization</span></div>
+            <div class="tech-item"><span class="tech-dot yellow"></span><strong>rf_model.pkl</strong><span>Auto-trains if missing</span></div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<script src="/js/app.js?v=16"></script>
+<script src="/js/realtime.js?v=16"></script>
+<script src="/js/upload-detail.js?v=16"></script>
+<script src="/js/forensic.js?v=16"></script>
+</body>
+</html>
